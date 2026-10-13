@@ -7,7 +7,10 @@ import logging
 import traceback
 import inspect
 import glob
-from flask import Flask, jsonify, request, render_template
+import time
+import secrets
+from datetime import timedelta
+from flask import Flask, jsonify, request, render_template, session
 import pandas as pd
 from dotenv import load_dotenv
 from google import genai
@@ -26,6 +29,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+
+# 24시간 세션 보안 설정
+app.secret_key = os.getenv("SECRET_KEY", "data_insight_builder_pin_secret_2026_xyz")
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=24)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # 파일 업로드 용량 제한 설정 (기본 10MB)
 max_mb = int(os.getenv("MAX_UPLOAD_MB", 10))
@@ -99,6 +108,64 @@ def detect_header_row(text):
     return header_idx, lines[header_idx]
 
 
+def is_authenticated():
+    """세션이 24시간(86400초) 이내에 유효하게 인증되었는지 검증"""
+    auth_time = session.get("auth_time")
+    is_auth = session.get("authenticated", False)
+    if is_auth and auth_time and (time.time() - auth_time < 86400):
+        return True
+    return False
+
+
+@app.route("/auth-status", methods=["GET"])
+def check_auth_status():
+    """현재 세션의 24시간 인증 상태 및 남은 유효 시간(초) 확인"""
+    auth_time = session.get("auth_time")
+    is_auth = session.get("authenticated", False)
+    if is_auth and auth_time and (time.time() - auth_time < 86400):
+        remaining = int(86400 - (time.time() - auth_time))
+        return jsonify({"authenticated": True, "remaining_seconds": remaining})
+    session.clear()
+    return jsonify({"authenticated": False, "remaining_seconds": 0})
+
+
+@app.route("/verify-pin", methods=["POST"])
+def verify_pin():
+    """4자리 비밀번호 검증 및 24시간 세션 발급"""
+    req_data = request.get_json(silent=True) or {}
+    input_pin = str(req_data.get("pin", "")).strip()
+    correct_pin = str(os.getenv("APP_PIN_CODE", "")).strip()
+    if not correct_pin:
+        logger.error("[AUTH] APP_PIN_CODE 환경변수가 설정되어 있지 않습니다.")
+        return jsonify({"error": "서버에 비밀번호 설정이 구성되지 않았습니다."}), 500
+
+    if not input_pin:
+        return jsonify({"error": "비밀번호를 입력해 주세요."}), 400
+
+    # 타이밍 공격 방지 constant-time comparison
+    if secrets.compare_digest(input_pin, correct_pin):
+        session.permanent = True
+        session["authenticated"] = True
+        session["auth_time"] = time.time()
+        logger.info("[AUTH] 비밀번호 인증 성공 (24시간 유효 세션 발급)")
+        return jsonify({
+            "status": "success",
+            "message": "인증 성공",
+            "expires_in_seconds": 86400
+        })
+    else:
+        logger.warning("[AUTH] 잘못된 비밀번호 입력 시도")
+        return jsonify({"error": "비밀번호가 올바르지 않습니다."}), 401
+
+
+@app.route("/lock", methods=["POST"])
+def lock_session():
+    """즉시 잠금 (세션 초기화)"""
+    session.clear()
+    logger.info("[AUTH] 세션 잠금 처리 완료")
+    return jsonify({"status": "locked"})
+
+
 @app.route("/", methods=["GET"])
 def index():
     logger.info("[REQUEST] GET /")
@@ -141,6 +208,10 @@ def inspect_file():
     10. 경고 목록 정리
     """
     logger.info("[REQUEST] POST /inspect")
+    if not is_authenticated():
+        logger.warning("[AUTH] 미인증 접근 시도 차단 (/inspect)")
+        return jsonify({"error": "보안 인증이 필요합니다. 먼저 4자리 비밀번호를 입력해 주세요."}), 401
+
     warnings = []
 
     try:
@@ -351,6 +422,9 @@ def suggest_analyses():
     실행 가능한 최적의 분석 3~5개를 JSON 형식으로 추천받아 반환.
     """
     logger.info("[REQUEST] POST /suggest")
+    if not is_authenticated():
+        logger.warning("[AUTH] 미인증 접근 시도 차단 (/suggest)")
+        return jsonify({"error": "보안 인증이 필요합니다. 먼저 4자리 비밀번호를 입력해 주세요."}), 401
 
     try:
         global CURRENT_DATASET
@@ -527,6 +601,9 @@ def run_tool():
     - 직전 실행 결과를 CURRENT_DATASET["last_run_result"]에 보관 (이후 /explain 모드 B에서 사용)
     """
     logger.info("[REQUEST] POST /run")
+    if not is_authenticated():
+        logger.warning("[AUTH] 미인증 접근 시도 차단 (/run)")
+        return jsonify({"error": "보안 인증이 필요합니다. 먼저 4자리 비밀번호를 입력해 주세요."}), 401
 
     try:
         global CURRENT_DATASET
@@ -636,6 +713,9 @@ def explain_result():
         mode = "B"
 
     logger.info(f"[REQUEST] POST /explain (mode={mode})")
+    if not is_authenticated():
+        logger.warning("[AUTH] 미인증 접근 시도 차단 (/explain)")
+        return jsonify({"error": "보안 인증이 필요합니다. 먼저 4자리 비밀번호를 입력해 주세요."}), 401
 
     try:
         global CURRENT_DATASET
@@ -755,6 +835,10 @@ def chat_followup():
     중학생도 단번에 이해할 수 있는 친절하고 쉬운 비유로 답변을 제공하는 대화 엔드포인트.
     """
     logger.info("[REQUEST] POST /chat")
+    if not is_authenticated():
+        logger.warning("[AUTH] 미인증 접근 시도 차단 (/chat)")
+        return jsonify({"error": "보안 인증이 필요합니다. 먼저 4자리 비밀번호를 입력해 주세요."}), 401
+
     try:
         global CURRENT_DATASET
         if CURRENT_DATASET["df"] is None or CURRENT_DATASET["diagnosis"] is None:
@@ -859,6 +943,10 @@ def ask_custom_query():
     3. Gemini가 계산된 팩트 수치를 바탕으로 중학생 눈높이의 친절하고 쉬운 비유 해설을 작성
     """
     logger.info("[REQUEST] POST /ask")
+    if not is_authenticated():
+        logger.warning("[AUTH] 미인증 접근 시도 차단 (/ask)")
+        return jsonify({"error": "보안 인증이 필요합니다. 먼저 4자리 비밀번호를 입력해 주세요."}), 401
+
     try:
         global CURRENT_DATASET
         if CURRENT_DATASET["df"] is None or CURRENT_DATASET["diagnosis"] is None:

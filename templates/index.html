@@ -11,6 +11,37 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
+  <!-- 🔒 4자리 보안 잠금 화면 (PIN Lock Modal) -->
+  <div class="pin-lock-overlay" id="pinLockOverlay">
+    <div class="pin-lock-card">
+      <div class="pin-lock-icon">🔒</div>
+      <h2 class="pin-lock-title">보안 접근 인증</h2>
+      <p class="pin-lock-desc">
+        이 서비스는 인가된 관리자 전용입니다.<br>
+        접근을 위해 <strong>4자리 비밀번호</strong>를 입력해 주세요.
+      </p>
+
+      <form id="pinForm" class="pin-form" onsubmit="return false;">
+        <div class="pin-inputs" id="pinInputs">
+          <input type="password" maxlength="1" class="pin-digit" inputmode="numeric" pattern="[0-9]*" autocomplete="off" autofocus>
+          <input type="password" maxlength="1" class="pin-digit" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-digit" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+          <input type="password" maxlength="1" class="pin-digit" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+        </div>
+
+        <div class="pin-error-msg hidden" id="pinErrorMsg">비밀번호가 올바르지 않습니다.</div>
+
+        <button type="button" class="btn btn-primary btn-pin-unlock" id="btnUnlock">
+          <span>잠금 해제</span>
+        </button>
+      </form>
+
+      <div class="pin-lock-footer">
+        <span class="pin-notice">※ 인증 완료 시 24시간 동안 유지되며, 이후 자동으로 다시 잠깁니다.</span>
+      </div>
+    </div>
+  </div>
+
   <div class="app-container">
     <!-- 1. 헤더 영역 -->
     <header class="app-header">
@@ -19,6 +50,8 @@
         <p class="subtitle">공식 데이터(CSV) 자동 진단 &bull; Pandas 정밀 계산 &bull; Gemini 팩트 기반 인사이트</p>
       </div>
       <div class="server-status-bar" id="statusBar">
+        <span class="status-badge" id="authBadge">🔒 인증 필요</span>
+        <button type="button" class="btn-lock-header hidden" id="btnLockApp" title="수동 잠금">🔒 잠금</button>
         <span class="status-badge" id="serverBadge">● 서버 연결 확인 중...</span>
         <span class="status-badge" id="apiKeyBadge">● API Key: 확인 중</span>
         <span class="status-badge" id="modelBadge">모델: 로딩 중</span>

@@ -65,6 +65,7 @@ function showAlert(message, type = "error") {
 document.addEventListener("DOMContentLoaded", async () => {
   appLog("PAGE", "페이지 로드 완료");
   initConsoleToggle();
+  initPinLock();
   initDragAndDrop();
   initModeToggle();
   initFollowupChat();
@@ -964,4 +965,214 @@ function escapeHtml(str) {
   return String(str || "").replace(/[&<>'"]/g, 
     tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
   );
+}
+
+// =====================================================================
+// 7단계: 4자리 보안 비밀번호 잠금 및 24시간 세션 제어
+// =====================================================================
+let autoLockTimer = null;
+
+function initPinLock() {
+  const overlay = document.getElementById("pinLockOverlay");
+  const form = document.getElementById("pinForm");
+  const btnUnlock = document.getElementById("btnUnlock");
+  const btnLock = document.getElementById("btnLockApp");
+  const digits = document.querySelectorAll(".pin-digit");
+
+  // 1. 숫자 입력 포커스 자동 이동
+  digits.forEach((input, idx) => {
+    input.addEventListener("input", () => {
+      // 숫자 이외의 문자 제거
+      input.value = input.value.replace(/[^0-9]/g, "");
+
+      if (input.value && idx < digits.length - 1) {
+        digits[idx + 1].focus();
+      }
+
+      // 4자리 모두 입력되면 자동 제출
+      const allFilled = Array.from(digits).every(d => d.value.length === 1);
+      if (allFilled) {
+        submitPinVerification();
+      }
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace" && !input.value && idx > 0) {
+        digits[idx - 1].focus();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        submitPinVerification();
+      }
+    });
+
+    // 붙여넣기 지원 (4자리 일괄 입력)
+    input.addEventListener("paste", (e) => {
+      e.preventDefault();
+      const pasteData = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "");
+      if (pasteData.length >= 4) {
+        for (let i = 0; i < 4; i++) {
+          digits[i].value = pasteData[i];
+        }
+        digits[3].focus();
+        submitPinVerification();
+      }
+    });
+  });
+
+  if (btnUnlock) {
+    btnUnlock.addEventListener("click", () => submitPinVerification());
+  }
+
+  // 상단 잠금 버튼 클릭 시 즉시 잠금
+  if (btnLock) {
+    btnLock.addEventListener("click", async () => {
+      try {
+        await fetch("/lock", { method: "POST" });
+      } catch (e) {}
+      lockAppUI();
+      appLog("AUTH", "사용자가 수동으로 잠금을 실행했습니다.");
+    });
+  }
+
+  // 페이지 진입 시 24시간 인증 상태 점검
+  checkPinAuthStatus();
+}
+
+async function checkPinAuthStatus() {
+  try {
+    const res = await fetch("/auth-status");
+    const data = await res.json();
+    if (data.authenticated && data.remaining_seconds > 0) {
+      unlockAppUI(data.remaining_seconds);
+    } else {
+      lockAppUI();
+    }
+  } catch (err) {
+    lockAppUI();
+  }
+}
+
+async function submitPinVerification() {
+  const digits = Array.from(document.querySelectorAll(".pin-digit"));
+  const pinVal = digits.map(d => d.value).join("");
+  const btnUnlock = document.getElementById("btnUnlock");
+
+  if (pinVal.length !== 4) {
+    showPinError("4자리 숫자를 모두 입력해 주세요.");
+    return;
+  }
+
+  if (btnUnlock) btnUnlock.disabled = true;
+
+  try {
+    const res = await fetch("/verify-pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: pinVal })
+    });
+
+    const resJson = await res.json();
+
+    if (res.ok && resJson.status === "success") {
+      appLog("AUTH", "4자리 비밀번호 인증 성공 (24시간 세션 활성화)");
+      unlockAppUI(resJson.expires_in_seconds || 86400);
+      hidePinError();
+    } else {
+      appLog("ERROR", "비밀번호 인증 실패");
+      showPinError(resJson.error || "비밀번호가 올바르지 않습니다.");
+      shakePinDigits();
+    }
+  } catch (err) {
+    appLog("ERROR", `인증 통신 오류: ${err.message}`);
+    showPinError("서버와의 통신에 실패했습니다.");
+  } finally {
+    if (btnUnlock) btnUnlock.disabled = false;
+  }
+}
+
+function unlockAppUI(remainingSeconds) {
+  const overlay = document.getElementById("pinLockOverlay");
+  const authBadge = document.getElementById("authBadge");
+  const btnLock = document.getElementById("btnLockApp");
+
+  if (overlay) {
+    overlay.classList.add("unlocked");
+  }
+
+  const hours = Math.floor(remainingSeconds / 3600);
+  const minutes = Math.floor((remainingSeconds % 3600) / 60);
+  const timeText = hours > 0 ? `${hours}시간 ${minutes}분 남음` : `${minutes}분 남음`;
+
+  if (authBadge) {
+    authBadge.textContent = `🔓 인증됨 (${timeText})`;
+    authBadge.className = "status-badge auth-active";
+  }
+
+  if (btnLock) {
+    btnLock.classList.remove("hidden");
+  }
+
+  // 24시간 만료 타이머 등록
+  if (autoLockTimer) clearTimeout(autoLockTimer);
+  autoLockTimer = setTimeout(() => {
+    lockAppUI();
+    showAlert("24시간 인증이 만료되었습니다. 다시 비밀번호를 입력해 주세요.", "warning");
+    appLog("AUTH", "24시간 세션 만료로 인해 화면이 잠겼습니다.");
+  }, remainingSeconds * 1000);
+}
+
+function lockAppUI() {
+  const overlay = document.getElementById("pinLockOverlay");
+  const authBadge = document.getElementById("authBadge");
+  const btnLock = document.getElementById("btnLockApp");
+  const digits = document.querySelectorAll(".pin-digit");
+
+  if (overlay) {
+    overlay.classList.remove("unlocked");
+  }
+
+  if (authBadge) {
+    authBadge.textContent = "🔒 인증 필요";
+    authBadge.className = "status-badge offline";
+  }
+
+  if (btnLock) {
+    btnLock.classList.add("hidden");
+  }
+
+  digits.forEach(d => d.value = "");
+  hidePinError();
+  if (digits[0]) digits[0].focus();
+
+  if (autoLockTimer) {
+    clearTimeout(autoLockTimer);
+    autoLockTimer = null;
+  }
+}
+
+function showPinError(msg) {
+  const errorMsg = document.getElementById("pinErrorMsg");
+  if (errorMsg) {
+    errorMsg.textContent = msg;
+    errorMsg.classList.remove("hidden");
+  }
+}
+
+function hidePinError() {
+  const errorMsg = document.getElementById("pinErrorMsg");
+  if (errorMsg) {
+    errorMsg.classList.add("hidden");
+  }
+}
+
+function shakePinDigits() {
+  const digits = document.querySelectorAll(".pin-digit");
+  digits.forEach(d => {
+    d.value = "";
+    d.style.borderColor = "#ef4444";
+    setTimeout(() => {
+      d.style.borderColor = "";
+    }, 1000);
+  });
+  if (digits[0]) digits[0].focus();
 }
