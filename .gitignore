@@ -1,0 +1,20 @@
+# 가상환경
+.venv/
+venv/
+env/
+
+# 환경변수 및 보안 키 (절대 깃에 올리지 않음)
+.env
+
+# 파이썬 캐시 파일
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE 및 에디터 설정
+.vscode/
+.idea/
+
+# 운영체제 임시 파일
+Thumbs.db
+.DS_Store
