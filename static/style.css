@@ -46,7 +46,13 @@
 
 body {
   font-family: var(--font-sans);
-  background: radial-gradient(circle at 50% 12%, #f5f7fa 0%, #e6eaef 50%, #dbe1e9 100%);
+  background-color: #93c5fd;
+  background-image: 
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(224, 242, 254, 0.45) 50%, rgba(186, 230, 253, 0.6) 100%),
+    url('/static/felt/sky_clouds_bg.jpg');
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: cover;
   background-attachment: fixed;
   color: var(--text-main);
   line-height: 1.6;
