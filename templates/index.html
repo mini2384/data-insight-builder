@@ -15,11 +15,11 @@
 </head>
 <body>
   <!-- 🔒 4자리 보안 잠금 화면 (PIN Lock Modal) -->
-  <!-- 🔒 4자리 보안 잠금 화면 (PIN Lock Modal) -->
   <div class="pin-lock-overlay" id="pinLockOverlay">
     <div class="pin-lock-card">
-      <div class="pin-lock-mascot">
-        <img src="/static/character_avatar.png" alt="Tweety Security" class="pin-avatar-img">
+      <div class="pin-lock-mascot felt-station-mascot">
+        <img src="/static/felt/station.png" alt="Antique Clock Station" class="pin-station-icon">
+        <img src="/static/felt/tweety_avatar.png" alt="Felt Tweety Security" class="pin-avatar-img">
         <span class="pin-lock-badge">🔒</span>
       </div>
       <h2 class="pin-lock-title">보안 접근 인증</h2>
@@ -54,10 +54,10 @@
     <header class="app-header">
       <div class="header-title-group">
         <div class="brand-row">
-          <img src="/static/character_avatar.png" alt="Brand Mascot" class="brand-avatar-img">
+          <img src="/static/felt/tweety_avatar.png" alt="Felt Tweety Mascot" class="brand-avatar-img felt-stitch">
           <h1 class="clay-title">AI Data Insight Builder</h1>
         </div>
-        <p class="subtitle">공식 데이터(CSV) 자동 진단 &bull; Pandas 정밀 계산 &bull; Gemini 팩트 기반 인사이트</p>
+        <p class="subtitle">자연과 통계의 따뜻한 만남 &bull; 공식 CSV 정밀 분석 &bull; Gemini AI 팩트 인사이트</p>
       </div>
       <div class="server-status-bar" id="statusBar">
         <span class="status-badge auth-badge" id="authBadge">🔐 인증됨 (24시간 0분 남음)</span>
@@ -68,17 +68,32 @@
       </div>
     </header>
 
-    <!-- 2. 단계 네비게이션 인디케이터 -->
+    <!-- 2. 단계 네비게이션 인디케이터 (펠트 아티팩트 미니 아이콘 연동) -->
     <div class="step-indicator">
-      <div class="step-badge active" id="stepBadge1">1. 파일 업로드 &amp; 진단</div>
+      <div class="step-badge active" id="stepBadge1">
+        <img src="/static/felt/book.png" alt="Book" class="step-mini-icon">
+        <span>1. 파일 업로드 &amp; 진단</span>
+      </div>
       <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
-      <div class="step-badge" id="stepBadge2">2. 분석 제안 선택</div>
+      <div class="step-badge" id="stepBadge2">
+        <img src="/static/felt/station.png" alt="Station" class="step-mini-icon">
+        <span>2. 분석 제안 선택</span>
+      </div>
       <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
-      <div class="step-badge" id="stepBadge3">3. 계산 &amp; 차트 시각화</div>
+      <div class="step-badge" id="stepBadge3">
+        <img src="/static/felt/globe.png" alt="Globe" class="step-mini-icon">
+        <span>3. 계산 &amp; 차트 시각화</span>
+      </div>
       <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
-      <div class="step-badge" id="stepBadge4">4. 팩트 기반 AI 해석</div>
+      <div class="step-badge" id="stepBadge4">
+        <img src="/static/felt/scroll.png" alt="Scroll" class="step-mini-icon">
+        <span>4. 팩트 기반 AI 해석</span>
+      </div>
       <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
-      <div class="step-badge" id="stepBadge5">5. AI 후속 대화 Q&amp;A</div>
+      <div class="step-badge" id="stepBadge5">
+        <img src="/static/felt/fox.png" alt="Fox" class="step-mini-icon">
+        <span>5. AI 후속 대화 Q&amp;A</span>
+      </div>
     </div>
 
     <!-- 안내 알림창 -->
@@ -92,12 +107,13 @@
         <div class="upload-dropzone hero-dropzone" id="dropZone">
           <input type="file" id="csvFileInput" accept=".csv" class="file-input-hidden">
           <div class="dropzone-content">
-            <div class="hero-character-stage">
-              <div class="character-speech-bubble">
-                <span>데이터 파일을 저에게 건네주세요! 🐣✨</span>
+            <div class="hero-felt-stage">
+              <div class="character-speech-bubble felt-bubble">
+                <span>자연과 데이터의 만남 🌿 분석할 CSV 파일을 올려주세요! 🐣✨</span>
               </div>
-              <img src="/static/character_transparent.png" alt="3D Yellow Chick Character" class="hero-character-img">
-              <div class="character-floor-shadow"></div>
+              <div class="hero-diorama-wrapper">
+                <img src="/static/felt/hero_composition.png" alt="Felt Botanical Data Studio" class="hero-diorama-img">
+              </div>
             </div>
             <p class="dropzone-text">CSV 파일을 드래그하거나 클릭하여 선택하세요</p>
             <p class="dropzone-subtext">최대 10MB &bull; 지원 인코딩: UTF-8-SIG, UTF-8, CP949, EUC-KR</p>
@@ -152,7 +168,7 @@
     <!-- ======================================================== -->
     <section class="card-section hidden" id="sectionSuggest">
       <div class="card-header">
-        <h2>💡 2단계: AI 맞춤 분석 제안 (도구 카탈로그 기반)</h2>
+        <h2><img src="/static/felt/station.png" alt="Station" class="section-felt-icon"> 2단계: AI 맞춤 분석 제안 (도구 카탈로그 기반)</h2>
         <span class="tag-ai">Gemini API 연동</span>
       </div>
       <div class="card-body">
@@ -172,7 +188,7 @@
         <!-- 🔍 원하는 형태의 정보 직접 질문하기 (자연어 질의응답) -->
         <div class="custom-query-box" id="customQueryBox">
           <div class="custom-query-header">
-            <h3>🔍 원하는 정보 직접 질문하기 (자연어 맞춤 분석)</h3>
+            <h3><img src="/static/felt/sunflower.png" alt="Sunflower" class="section-felt-icon-sm"> 원하는 정보 직접 질문하기 (자연어 맞춤 분석)</h3>
             <p class="custom-query-desc">
               알고 싶은 내용을 자연어로 질문하면, <strong>Pandas가 데이터를 직접 집계</strong>하고 <strong>AI 선생님이 중학생 눈높이로 알기 쉽게 설명</strong>해 드립니다.
             </p>
@@ -264,7 +280,7 @@
     <!-- ======================================================== -->
     <section class="card-section hidden" id="sectionRun">
       <div class="card-header">
-        <h2>📈 3단계: 분석 결과 &amp; 차트 시각화</h2>
+        <h2><img src="/static/felt/globe.png" alt="Globe" class="section-felt-icon"> 3단계: 분석 결과 &amp; 차트 시각화</h2>
         <span class="tag-pandas">Pandas 100% 정밀 계산</span>
       </div>
       <div class="card-body">
@@ -325,7 +341,7 @@
     <!-- ======================================================== -->
     <section class="card-section hidden" id="sectionExplain">
       <div class="card-header">
-        <h2>📝 4단계: 통계 보고서 및 AI 해석 (모드 비교)</h2>
+        <h2><img src="/static/felt/scroll.png" alt="Scroll" class="section-felt-icon"> 4단계: 통계 보고서 및 AI 해석 (모드 비교)</h2>
         <div class="mode-toggle-group">
           <button type="button" class="btn-toggle active" id="btnModeB" data-mode="B">
             모드 B (정식 - 팩트 엄격 모드)
@@ -370,7 +386,7 @@
     <!-- ======================================================== -->
     <section class="card-section hidden" id="sectionFollowupChat">
       <div class="card-header">
-        <h2>💬 5단계: AI 데이터 튜터 후속 대화 (중학생 눈높이 Q&amp;A)</h2>
+        <h2><img src="/static/felt/fox.png" alt="Fox" class="section-felt-icon"> 5단계: AI 데이터 튜터 후속 대화 (중학생 눈높이 Q&amp;A)</h2>
         <span class="badge" id="chatReportContextBadge">모드 B 보고서 연동</span>
       </div>
       <div class="card-body">
@@ -390,7 +406,7 @@
         <!-- 대화 메시지 목록 -->
         <div class="chat-messages" id="chatMessages">
           <div class="chat-msg ai">
-            <div class="msg-avatar"><img src="/static/character_avatar.png" alt="Tutor" class="chat-tutor-avatar"></div>
+            <div class="msg-avatar"><img src="/static/felt/tweety_avatar.png" alt="Felt Tutor" class="chat-tutor-avatar"></div>
             <div class="msg-bubble">
               안녕하세요! 여러분의 AI 데이터 튜터입니다 🎓<br>
               앞서 생성된 통계 보고서를 보면서 궁금한 점이나 이해하기 어려운 단어가 있으셨나요?<br>
