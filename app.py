@@ -970,7 +970,15 @@ def ask_custom_query():
         df = CURRENT_DATASET["df"]
         diag = CURRENT_DATASET["diagnosis"]
         year_cols = diag.get("year_columns", [])
-        rec_year = diag.get("recommended_year", "2024")
+        
+        # 직전 3단계 실행 결과의 기준 연도가 있다면 우선 참고 (예: '다음 차트에 한국의 위치도 알려줘' 같은 후속 질의 대응)
+        last_run = CURRENT_DATASET.get("last_run_result") or {}
+        last_ref_period = str(last_run.get("reference_period", "")).replace("년", "").strip()
+        if last_ref_period and last_ref_period in df.columns:
+            rec_year = last_ref_period
+        else:
+            rec_year = diag.get("recommended_year", "2024")
+
         label_col = diag.get("aggregate_label_column") or (diag.get("text_columns", ["Country Name"])[0])
 
         # 1. Gemini를 통해 질문의 의도 및 파라미터 파싱
@@ -982,7 +990,7 @@ def ask_custom_query():
 
 사용자의 질문을 분석하여 아래 JSON 규격으로만 응답하세요:
 {{
-  "year": "질문에서 언급된 연도(4자리 숫자, 없으면 '{rec_year}')",
+  "year": "질문에서 언급된 연도(4자리 숫자, 없거나 '다음 차트'/'이 차트' 등 문맥 지칭인 경우 '{rec_year}')",
   "top_n": 10,
   "target_country_query": "비교하고 싶은 특정 국가명 (예: 한국, 대한민국 -> 'Korea, Rep.' 또는 'Korea', 없으면 null)",
   "sort_order": "desc"
@@ -997,7 +1005,7 @@ def ask_custom_query():
         parsed_intent = json.loads(parse_resp.text or "{}")
         logger.info(f"[AI] ask 의도 파싱 완료: {parsed_intent}")
 
-        target_year = str(parsed_intent.get("year") or rec_year)
+        target_year = str(parsed_intent.get("year") or rec_year).replace("년", "").strip()
         if target_year not in df.columns:
             target_year = rec_year
 
@@ -1038,10 +1046,10 @@ def ask_custom_query():
 
         # 특정 타깃 국가(예: 한국) 검색 및 위치 파악
         target_info = None
-        if target_country_q or any(kw in question for kw in ["한국", "대한민국", "korea"]):
+        if target_country_q or any(kw in question for kw in ["한국", "대한민국", "korea", "남한", "우리나라"]):
             t_query = str(target_country_q or "korea").lower()
-            if any(k in t_query or k in question for k in ["korea", "한국", "대한민국", "south korea"]):
-                match_mask = valid_df[label_col].astype(str).str.contains("Korea, Rep.|Korea", case=False, regex=True)
+            if any(k in t_query or k in question for k in ["korea", "한국", "대한민국", "south korea", "우리나라", "남한"]):
+                match_mask = valid_df[label_col].astype(str).str.contains("Korea, Rep.|Korea|South Korea", case=False, regex=True)
             else:
                 match_mask = valid_df[label_col].astype(str).str.contains(t_query, case=False)
 
@@ -1111,15 +1119,22 @@ def ask_custom_query():
         chart_labels = []
         chart_data = []
         chart_bg = []
+        chart_border = []
         for item in top_list:
             chart_labels.append(item["country"])
             chart_data.append(item["value"])
-            chart_bg.append("rgba(234, 179, 8, 0.9)" if item["is_target"] else "rgba(54, 162, 235, 0.7)")
+            if item["is_target"]:
+                chart_bg.append("rgba(245, 158, 11, 0.95)")  # 골드/앰버
+                chart_border.append("rgba(180, 83, 9, 1)")
+            else:
+                chart_bg.append("rgba(56, 189, 248, 0.75)")   # 맑은 하늘색
+                chart_border.append("rgba(14, 165, 233, 1)")
 
         if target_info and not any(item["is_target"] for item in top_list):
-            chart_labels.extend(["---", f"{target_info['country']} (#{target_info['rank']})"])
+            chart_labels.extend(["---", f"🇰🇷 {target_info['country']} (#{target_info['rank']}위)"])
             chart_data.extend([None, target_info["value"]])
-            chart_bg.extend(["rgba(0,0,0,0)", "rgba(239, 68, 68, 0.9)"])
+            chart_bg.extend(["rgba(0,0,0,0)", "rgba(239, 68, 68, 0.92)"])  # 눈에 확 띄는 산호/레드
+            chart_border.extend(["rgba(0,0,0,0)", "rgba(185, 28, 28, 1)"])
 
         chart_config = {
             "type": "bar",
@@ -1128,7 +1143,10 @@ def ask_custom_query():
             "datasets": [{
                 "label": f"{target_year}년 인터넷 이용률 (%)",
                 "data": chart_data,
-                "backgroundColor": chart_bg
+                "backgroundColor": chart_bg,
+                "borderColor": chart_border,
+                "borderWidth": 1.5,
+                "borderRadius": 4
             }]
         }
 

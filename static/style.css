@@ -1302,6 +1302,79 @@ tr:hover td {
   border-bottom: 2px solid #eab308 !important;
 }
 
+/* 3단계 차트 전용 자연어 질문 인터페이스 */
+.chart-nl-query-box {
+  background: #f8fafc;
+  border: 1.5px dashed #94a3b8;
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.chart-nl-query-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.chart-nl-title {
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.chart-nl-hint {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.chart-nl-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.chart-nl-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: var(--radius-sm);
+  outline: none;
+  font-family: inherit;
+  transition: border-color var(--transition-speed);
+}
+
+.chart-nl-input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.chart-nl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip-btn-sm {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.chip-btn-sm:hover {
+  background: #f1f5f9;
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
 .log-tag.query {
   background: #0284c7;
   color: #fff;

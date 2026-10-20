@@ -284,6 +284,24 @@
         <span class="tag-pandas">Pandas 100% 정밀 계산</span>
       </div>
       <div class="card-body">
+        <!-- 3단계 차트에 자연어 질문 반영 인터페이스 -->
+        <div class="chart-nl-query-box" id="chartNlQueryBox">
+          <div class="chart-nl-query-header">
+            <span class="chart-nl-title">💬 <strong>차트에 자연어로 질문 반영하기</strong></span>
+            <span class="chart-nl-hint">"다음 차트에 한국의 위치도 알려줘" 같은 질문을 입력하면 즉시 차트와 수치에 반영됩니다.</span>
+          </div>
+          <form class="chart-nl-form" id="chartNlForm">
+            <input type="text" id="chartNlInput" class="chart-nl-input" placeholder="예: 다음 차트에 한국의 위치도 알려줘 (또는 상위 10개국과 한국 비교)" autocomplete="off">
+            <button type="submit" class="btn btn-primary btn-sm" id="btnChartNlSubmit">
+              <span>차트에 반영 🚀</span>
+            </button>
+          </form>
+          <div class="chart-nl-chips">
+            <button type="button" class="chip-btn-sm" data-chart-query="다음 차트에 한국의 위치도 알려줘">🇰🇷 다음 차트에 한국의 위치도 알려줘</button>
+            <button type="button" class="chip-btn-sm" data-chart-query="인터넷 이용률 상위 10개 국가와 대한민국 위치 비교해줘">🏆 상위 10개국 + 대한민국 비교</button>
+            <button type="button" class="chip-btn-sm" data-chart-query="인터넷 이용률 최하위 10개국 보여줘">🔻 최하위 10개국 순위</button>
+          </div>
+        </div>
         <!-- 실행 로딩 -->
         <div class="loading-state hidden" id="runLoading">
           <div class="spinner"></div>
@@ -397,6 +415,7 @@
 
         <!-- 추천 빠른 질문 칩들 -->
         <div class="quick-questions" id="quickQuestions">
+          <button type="button" class="chip-btn" data-q="다음 차트에 한국의 위치도 알려줘!">🇰🇷 3번 차트에 한국 위치도 알려줘!</button>
           <button type="button" class="chip-btn" data-q="이 보고서 내용을 중학생도 단번에 이해할 수 있게 쉬운 비유로 다시 설명해줘!">🎒 중학생 눈높이 설명</button>
           <button type="button" class="chip-btn" data-q="이 통계 분석 결과에서 가장 놀라운 점이나 주목할 점이 뭐야?">😲 가장 놀라운 점</button>
           <button type="button" class="chip-btn" data-q="왜 어떤 국가들은 이 분석 결과에서 제외된 거야? 알기 쉽게 설명해줘.">❓ 제외된 국가 이유</button>

@@ -766,6 +766,45 @@ async function sendChatMessage(message) {
   appLog("CHAT", `후속 질문 전송: "${message.slice(0, 30)}..." (모드: ${state.explainMode})`);
 
   try {
+    // 💡 차트 수정/반영 관련 질문인 경우 (예: "다음 차트에 한국의 위치도 알려줘", "차트에 한국 추가해줘")
+    const isChartQuery = /(차트|위치도|순위|위치|추가해|보여줘|상위|하위|한국)/.test(message) &&
+                         /(차트|위치|순위|한국|대한민국)/.test(message);
+
+    let chartUpdatedNotice = "";
+    if (isChartQuery && state.diagnosis) {
+      try {
+        appLog("CHART", `채팅에서 차트 반영 질의 감지 -> 3단계 차트 자동 갱신 요청: "${message}"`);
+        const chartRes = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: message })
+        });
+        if (chartRes.ok) {
+          const chartData = await chartRes.json();
+          if (chartData.run_result) {
+            state.lastRunResult = chartData.run_result;
+            const sectionRun = document.getElementById("sectionRun");
+            const runResultsBox = document.getElementById("runResultsBox");
+            if (sectionRun) sectionRun.classList.remove("hidden");
+            if (runResultsBox) runResultsBox.classList.remove("hidden");
+
+            renderAuditCard(chartData.run_result);
+            renderChart(chartData.run_result.result?.chart);
+            renderCalcTable(chartData.run_result.result);
+
+            const targetInfo = chartData.facts?.target_country_info;
+            if (targetInfo) {
+              chartUpdatedNotice = `\n\n> 📈 **[3단계 차트 연동 완료]** 사용자의 요청을 반영하여 **3단계 차트에 ${targetInfo.country}의 위치(${targetInfo.rank}위, ${targetInfo.value}%)를 강조**해 드렸어요! 위로 올라가 3단계 차트를 확인해 보세요.`;
+            } else {
+              chartUpdatedNotice = `\n\n> 📈 **[3단계 차트 연동 완료]** 요청하신 내용으로 **3단계 차트와 수치 데이터가 새롭게 갱신**되었습니다!`;
+            }
+          }
+        }
+      } catch (chartErr) {
+        appLog("WARN", `채팅 연동 차트 갱신 중 오류 (채팅 답변은 계속 진행): ${chartErr.message}`);
+      }
+    }
+
     const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -781,7 +820,7 @@ async function sendChatMessage(message) {
       throw new Error(resJson.error || "답변을 가져오지 못했습니다.");
     }
 
-    const replyText = resJson.reply || "";
+    const replyText = (resJson.reply || "") + chartUpdatedNotice;
     appLog("CHAT", `AI 답변 수신 완료 (${replyText.length}자)`);
 
     const bubbleEl = aiMsgEl.querySelector(".msg-bubble");
@@ -831,6 +870,33 @@ function initCustomQuery() {
       const q = chip.getAttribute("data-query");
       if (q) {
         if (input) input.value = q;
+        executeCustomQuery(q);
+      }
+    });
+  });
+
+  // 3단계 내부 차트 자연어 질문 폼 연동
+  const chartNlForm = document.getElementById("chartNlForm");
+  const chartNlInput = document.getElementById("chartNlInput");
+  const chartNlChips = document.querySelectorAll("[data-chart-query]");
+
+  if (chartNlForm) {
+    chartNlForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const q = chartNlInput ? chartNlInput.value.trim() : "";
+      if (!q) {
+        showAlert("차트에 반영할 질문을 입력해 주세요.");
+        return;
+      }
+      executeCustomQuery(q);
+    });
+  }
+
+  chartNlChips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      const q = chip.getAttribute("data-chart-query");
+      if (q) {
+        if (chartNlInput) chartNlInput.value = q;
         executeCustomQuery(q);
       }
     });
