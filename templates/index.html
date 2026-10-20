@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Data Insight Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -46,28 +49,28 @@
     <!-- 1. 헤더 영역 -->
     <header class="app-header">
       <div class="header-title-group">
-        <h1>📊 AI Data Insight Builder</h1>
+        <h1 class="clay-title">AI Data Insight Builder</h1>
         <p class="subtitle">공식 데이터(CSV) 자동 진단 &bull; Pandas 정밀 계산 &bull; Gemini 팩트 기반 인사이트</p>
       </div>
       <div class="server-status-bar" id="statusBar">
-        <span class="status-badge" id="authBadge">🔒 인증 필요</span>
-        <button type="button" class="btn-lock-header hidden" id="btnLockApp" title="수동 잠금">🔒 잠금</button>
-        <span class="status-badge" id="serverBadge">● 서버 연결 확인 중...</span>
-        <span class="status-badge" id="apiKeyBadge">● API Key: 확인 중</span>
-        <span class="status-badge" id="modelBadge">모델: 로딩 중</span>
+        <span class="status-badge auth-badge" id="authBadge">🔐 인증됨 (24시간 0분 남음)</span>
+        <button type="button" class="status-badge btn-lock-pill hidden" id="btnLockApp" title="수동 잠금">🔒 잠금</button>
+        <span class="status-badge server-badge" id="serverBadge">● 서버 정상 가동</span>
+        <span class="status-badge apikey-badge" id="apiKeyBadge">● API Key: 등록됨</span>
+        <span class="status-badge model-badge active-glow" id="modelBadge">모델: Gemini 3.1-flash-lite</span>
       </div>
     </header>
 
     <!-- 2. 단계 네비게이션 인디케이터 -->
     <div class="step-indicator">
       <div class="step-badge active" id="stepBadge1">1. 파일 업로드 &amp; 진단</div>
-      <div class="step-arrow">&rarr;</div>
-      <div class="step-badge" id="stepBadge2">2. AI 분석 제안 선택</div>
-      <div class="step-arrow">&rarr;</div>
+      <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
+      <div class="step-badge" id="stepBadge2">2. 분석 제안 선택</div>
+      <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
       <div class="step-badge" id="stepBadge3">3. 계산 &amp; 차트 시각화</div>
-      <div class="step-arrow">&rarr;</div>
+      <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
       <div class="step-badge" id="stepBadge4">4. 팩트 기반 AI 해석</div>
-      <div class="step-arrow">&rarr;</div>
+      <div class="step-arrow"><span class="arrow-dot"></span>&rarr;</div>
       <div class="step-badge" id="stepBadge5">5. AI 후속 대화 Q&amp;A</div>
     </div>
 
@@ -78,16 +81,14 @@
     <!-- SECTION 1: 파일 업로드 및 자동 진단 -->
     <!-- ======================================================== -->
     <section class="card-section" id="sectionUpload">
-      <div class="card-header">
-        <h2>📁 1단계: CSV 파일 업로드 및 상태 진단</h2>
-        <span class="tag-info">디스크 저장 없음 (메모리 보관)</span>
-      </div>
-      <div class="card-body">
-        <div class="upload-dropzone" id="dropZone">
+      <div class="card-body no-pad">
+        <div class="upload-dropzone hero-dropzone" id="dropZone">
           <input type="file" id="csvFileInput" accept=".csv" class="file-input-hidden">
           <div class="dropzone-content">
-            <span class="upload-icon">📄</span>
-            <p class="dropzone-text"><strong>CSV 파일을 드래그</strong>하거나 <strong>클릭</strong>하여 선택하세요</p>
+            <div class="hero-mascot-wrapper">
+              <img src="/static/mascot.png" alt="3D AI Data Mascot" class="hero-mascot-img">
+            </div>
+            <p class="dropzone-text">CSV 파일을 드래그하거나 클릭하여 선택하세요</p>
             <p class="dropzone-subtext">최대 10MB &bull; 지원 인코딩: UTF-8-SIG, UTF-8, CP949, EUC-KR</p>
           </div>
         </div>

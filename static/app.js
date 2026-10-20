@@ -107,7 +107,7 @@ async function checkServerHealth() {
     }
 
     modelBadge.textContent = `모델: ${data.model || "알 수 없음"}`;
-    modelBadge.className = "status-badge model";
+    modelBadge.className = "status-badge model-badge active-glow";
   } catch (err) {
     serverBadge.textContent = "● 서버 연결 실패";
     serverBadge.className = "status-badge offline";
@@ -1104,8 +1104,8 @@ function unlockAppUI(remainingSeconds) {
   const timeText = hours > 0 ? `${hours}시간 ${minutes}분 남음` : `${minutes}분 남음`;
 
   if (authBadge) {
-    authBadge.textContent = `🔓 인증됨 (${timeText})`;
-    authBadge.className = "status-badge auth-active";
+    authBadge.textContent = `🔐 인증됨 (${timeText})`;
+    authBadge.className = "status-badge auth-badge active-glow";
   }
 
   if (btnLock) {
