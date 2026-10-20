@@ -15,9 +15,13 @@
 </head>
 <body>
   <!-- 🔒 4자리 보안 잠금 화면 (PIN Lock Modal) -->
+  <!-- 🔒 4자리 보안 잠금 화면 (PIN Lock Modal) -->
   <div class="pin-lock-overlay" id="pinLockOverlay">
     <div class="pin-lock-card">
-      <div class="pin-lock-icon">🔒</div>
+      <div class="pin-lock-mascot">
+        <img src="/static/character_avatar.png" alt="Tweety Security" class="pin-avatar-img">
+        <span class="pin-lock-badge">🔒</span>
+      </div>
       <h2 class="pin-lock-title">보안 접근 인증</h2>
       <p class="pin-lock-desc">
         이 서비스는 인가된 관리자 전용입니다.<br>
@@ -49,7 +53,10 @@
     <!-- 1. 헤더 영역 -->
     <header class="app-header">
       <div class="header-title-group">
-        <h1 class="clay-title">AI Data Insight Builder</h1>
+        <div class="brand-row">
+          <img src="/static/character_avatar.png" alt="Brand Mascot" class="brand-avatar-img">
+          <h1 class="clay-title">AI Data Insight Builder</h1>
+        </div>
         <p class="subtitle">공식 데이터(CSV) 자동 진단 &bull; Pandas 정밀 계산 &bull; Gemini 팩트 기반 인사이트</p>
       </div>
       <div class="server-status-bar" id="statusBar">
@@ -85,8 +92,12 @@
         <div class="upload-dropzone hero-dropzone" id="dropZone">
           <input type="file" id="csvFileInput" accept=".csv" class="file-input-hidden">
           <div class="dropzone-content">
-            <div class="hero-mascot-wrapper">
-              <img src="/static/mascot.png" alt="3D AI Data Mascot" class="hero-mascot-img">
+            <div class="hero-character-stage">
+              <div class="character-speech-bubble">
+                <span>데이터 파일을 저에게 건네주세요! 🐣✨</span>
+              </div>
+              <img src="/static/character_transparent.png" alt="3D Yellow Chick Character" class="hero-character-img">
+              <div class="character-floor-shadow"></div>
             </div>
             <p class="dropzone-text">CSV 파일을 드래그하거나 클릭하여 선택하세요</p>
             <p class="dropzone-subtext">최대 10MB &bull; 지원 인코딩: UTF-8-SIG, UTF-8, CP949, EUC-KR</p>
@@ -379,7 +390,7 @@
         <!-- 대화 메시지 목록 -->
         <div class="chat-messages" id="chatMessages">
           <div class="chat-msg ai">
-            <div class="msg-avatar">🤖</div>
+            <div class="msg-avatar"><img src="/static/character_avatar.png" alt="Tutor" class="chat-tutor-avatar"></div>
             <div class="msg-bubble">
               안녕하세요! 여러분의 AI 데이터 튜터입니다 🎓<br>
               앞서 생성된 통계 보고서를 보면서 궁금한 점이나 이해하기 어려운 단어가 있으셨나요?<br>

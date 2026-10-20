@@ -751,7 +751,7 @@ async function sendChatMessage(message) {
   const aiMsgEl = document.createElement("div");
   aiMsgEl.className = "chat-msg ai";
   aiMsgEl.innerHTML = `
-    <div class="msg-avatar">🤖</div>
+    <div class="msg-avatar"><img src="/static/character_avatar.png" alt="Tutor" class="chat-tutor-avatar"></div>
     <div class="msg-bubble loading-msg">
       <em>선생님이 중학생 눈높이에 맞춰 알기 쉽게 설명할 내용을 정리하고 있어요... 💭</em>
     </div>
