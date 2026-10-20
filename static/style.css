@@ -89,19 +89,49 @@ body {
 }
 
 .brand-avatar-img {
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   object-fit: cover;
   border-radius: 50%;
   background: #fef08a;
   border: 2.5px solid #fde047;
   box-shadow: 0 4px 12px rgba(234, 179, 8, 0.28);
   animation: gentleBob 3.5s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 @keyframes gentleBob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
+}
+
+.title-image-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.brand-title-img {
+  height: 92px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.15));
+  transition: transform 0.2s ease;
+}
+
+.brand-title-img:hover {
+  transform: scale(1.02);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .header-title-group h1,
