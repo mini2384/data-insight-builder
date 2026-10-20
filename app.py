@@ -1227,6 +1227,99 @@ def ask_custom_query():
         return jsonify({"error": f"맞춤 질의 처리 중 오류가 발생했습니다: {str(e)}"}), 500
 
 
+@app.route("/create-material", methods=["POST"])
+def create_custom_query_material():
+    """
+    POST /create-material:
+    2단계 맞춤 질의에서 질문한 내용과 Pandas의 100% 검증된 통계 수치를 결합하여
+    보고서·발표·수업 등에서 즉시 활용할 수 있는 완성형 '데이터 인사이트 브리핑 자료'를 생성합니다.
+    """
+    logger.info("[REQUEST] POST /create-material")
+    if not is_authenticated():
+        logger.warning("[AUTH] 미인증 접근 시도 차단 (/create-material)")
+        return jsonify({"error": "보안 인증이 필요합니다. 먼저 4자리 비밀번호를 입력해 주세요."}), 401
+
+    try:
+        global CURRENT_DATASET
+        if CURRENT_DATASET["df"] is None:
+            return jsonify({"error": "분석할 데이터셋이 없습니다. 먼저 CSV 파일을 업로드해주세요."}), 400
+
+        req_data = request.get_json(silent=True) or {}
+        question = (req_data.get("question") or "").strip()
+        last_run = CURRENT_DATASET.get("last_run_result") or {}
+        calc_result = last_run.get("result", {})
+        facts = calc_result.get("summary") or {}
+        table_rows = calc_result.get("table_rows") or []
+        ref_period = last_run.get("reference_period", "2024년")
+
+        api_key = os.getenv("GEMINI_API_KEY", "").strip()
+        if not api_key or api_key == "your_gemini_api_key_here":
+            return jsonify({"error": "Gemini API 키가 설정되지 않았습니다."}), 500
+
+        model_name = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
+        client = genai.Client(api_key=api_key)
+        ind_meta = get_indicator_metadata()
+
+        material_prompt = f"""
+당신은 대한민국 최고 수준의 데이터 커뮤니케이션 전문 브리핑 수석 연구관입니다.
+사용자가 질문한 주제에 대해 검증된 Pandas 팩트 데이터만을 활용하여,
+학교 수업 자료, 공공/기업 보고서, 카드뉴스 브리핑 등 어디에든 그대로 인용 가능한 **완성형 전문 데이터 브리핑 자료(Dossier)**를 마크다운 형식으로 작성해주세요.
+
+[질문 주제]
+"{question if question else '맞춤 데이터 통계 분석'}"
+
+[지표 메타데이터]
+- 지표명: {ind_meta.get('name')}
+- 지표 정의: {ind_meta.get('note')}
+- 공식 출처: {ind_meta.get('source')}
+
+[Pandas가 100% 직접 계산한 정확한 통계 수치 팩트]
+- 기준 시점: {ref_period}
+- 분석 대상 국가 수: {last_run.get('used_rows')}개국 (제외: {last_run.get('excluded_rows')}개 행 - {last_run.get('exclusion_reason')})
+- 통계 팩트 요약:
+{json.dumps(facts, ensure_ascii=False, indent=2)}
+- 주요 순위 및 수치 데이터:
+{json.dumps(table_rows, ensure_ascii=False, indent=2)}
+
+[자료 구성 필수 6대 섹션 - 마크다운 헤더(##) 유지]
+1. ## 📌 1. 브리핑 핵심 요약 (Executive Summary)
+   - 질문에 대한 가장 핵심적인 통계 팩트 3가지를 명확한 불릿포인트로 제시
+2. ## 📊 2. 주요 통계 팩트 및 국가별 순위
+   - 1위~10위 최상위권 국가들의 수치와 한국/특정 국가의 위치({facts.get('target_country_info', {}).get('rank', 'N/A')}위, {facts.get('target_country_info', {}).get('value', 'N/A')}%) 비교
+   - 전 세계 평균({facts.get('global_mean', 'N/A')}%) 및 중앙값({facts.get('global_median', 'N/A')}%)과의 격차 명시
+3. ## 💡 3. 데이터가 말해주는 핵심 인사이트
+   - 왜 이런 격차가 발생하는지, 최상위권 국가군(중동 부국, 북유럽 등)의 인프라 특징과 한국의 글로벌 위상을 객관적으로 해석
+4. ## 🎒 4. 1분 쉬운 비유 해설 (발표·교육용)
+   - 학생이나 비전문가 청중도 단번에 이해할 수 있는 일상 생활/학교 생활 비유 설명 (예: 100점 만점 시험 점수 비유, 193명 학생 반 비유)
+5. ## ⚠️ 5. 데이터 해석 시 주의사항 및 데이터 정합성
+   - 기준 연도({ref_period}) 단일 시점 기준 비교 원칙, 결측치 및 집계 행 제외 이유({last_run.get('exclusion_reason')}) 투명하게 기술
+6. ## 🎯 6. 향후 확인 및 제언 과제
+   - 시계열 변화 추이나 추가 확인이 필요한 관련 지표 제언
+
+[작성 원칙]
+- 절대로 수치를 날조하지 말고 제공된 숫자만을 인용할 것.
+- 시각적으로 깔끔하도록 마크다운 표, 강조(**볼드**), 인용구(`>`), 불릿포인트를 적절히 배치할 것.
+"""
+        logger.info("[AI] 맞춤 브리핑 자료 생성 시작")
+        ai_resp = client.models.generate_content(
+            model=model_name,
+            contents=material_prompt
+        )
+        material_markdown = ai_resp.text or ""
+        logger.info("[AI] 맞춤 브리핑 자료 생성 완료")
+
+        return jsonify(sanitize_for_json({
+            "status": "success",
+            "question": question,
+            "period": ref_period,
+            "material": material_markdown
+        }))
+
+    except Exception as e:
+        logger.error(f"[ERROR] create-material 오류: {str(e)}\n{traceback.format_exc()}")
+        return jsonify({"error": f"자료 생성 중 오류가 발생했습니다: {str(e)}"}), 500
+
+
 if __name__ == "__main__":
     debug_mode = os.getenv("FLASK_DEBUG", "true").lower() == "true"
     logger.info(f"AI Data Insight Builder 서버를 시작합니다. (debug={debug_mode})")

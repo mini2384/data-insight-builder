@@ -14,7 +14,9 @@ const state = {
   lastRunResult: null,
   currentChart: null,
   explainMode: "B",
-  chatHistory: []
+  chatHistory: [],
+  lastCustomQuestion: "",
+  lastMaterialText: ""
 };
 
 // =====================================================================
@@ -901,6 +903,40 @@ function initCustomQuery() {
       }
     });
   });
+
+  // 질문 기반 완성형 자료 만들기 버튼 이벤트 바인딩
+  const btnBuild = document.getElementById("btnBuildQueryMaterial");
+  if (btnBuild) {
+    btnBuild.addEventListener("click", () => generateCustomQueryMaterial());
+  }
+
+  const btnCopy = document.getElementById("btnCopyQueryMaterial");
+  if (btnCopy) {
+    btnCopy.addEventListener("click", async () => {
+      if (!state.lastMaterialText) {
+        showAlert("복사할 자료가 없습니다. 먼저 '완성형 분석 자료 만들기'를 클릭해 주세요.");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(state.lastMaterialText);
+        showAlert("📋 질문 기반 브리핑 자료가 클립보드에 복사되었습니다!", "success");
+      } catch (err) {
+        showAlert("클립보드 복사에 실패했습니다.");
+      }
+    });
+  }
+
+  const btnPrint = document.getElementById("btnPrintQueryMaterial");
+  if (btnPrint) {
+    btnPrint.addEventListener("click", () => {
+      const card = document.getElementById("customQueryMaterialCard");
+      if (!card || card.classList.contains("hidden")) {
+        showAlert("인쇄할 자료가 없습니다. 먼저 '완성형 분석 자료 만들기'를 클릭해 주세요.");
+        return;
+      }
+      window.print();
+    });
+  }
 }
 
 async function executeCustomQuery(question) {
@@ -967,6 +1003,8 @@ async function executeCustomQuery(question) {
       }
     }
 
+    state.lastCustomQuestion = question;
+
     // 2. 질문 결과 카드에도 연도 배지, 표 및 AI 선생님 해설 렌더링
     if (yearBadge) {
       yearBadge.textContent = `${resJson.year}년 기준 팩트`;
@@ -975,6 +1013,11 @@ async function executeCustomQuery(question) {
 
     const expMarkdown = resJson.explanation || "";
     explainContent.innerHTML = window.marked ? window.marked.parse(expMarkdown) : `<pre>${expMarkdown}</pre>`;
+
+    // 이전 생성된 자료 카드가 있다면 숨김 리셋
+    const materialCard = document.getElementById("customQueryMaterialCard");
+    if (materialCard) materialCard.classList.add("hidden");
+
     resultBox.classList.remove("hidden");
 
     // 3. 사용자가 차트와 계산 결과를 바로 볼 수 있도록 3단계 시각화 영역으로 부드럽게 스크롤!
@@ -989,6 +1032,59 @@ async function executeCustomQuery(question) {
   } finally {
     loading.classList.add("hidden");
     if (btnSubmit) btnSubmit.disabled = false;
+  }
+}
+
+async function generateCustomQueryMaterial() {
+  const btnBuild = document.getElementById("btnBuildQueryMaterial");
+  const loading = document.getElementById("customQueryMaterialLoading");
+  const card = document.getElementById("customQueryMaterialCard");
+  const heading = document.getElementById("materialHeading");
+  const refDate = document.getElementById("materialRefDate");
+  const content = document.getElementById("materialContent");
+
+  const question = state.lastCustomQuestion || "맞춤 데이터 분석 질문";
+
+  if (btnBuild) btnBuild.disabled = true;
+  if (loading) loading.classList.remove("hidden");
+  if (card) card.classList.add("hidden");
+
+  appLog("MATERIAL", `질문 기반 완성형 브리핑 자료 생성 시작: "${question}"`);
+
+  try {
+    const res = await fetch("/create-material", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question })
+    });
+
+    const resJson = await res.json();
+    if (!res.ok) {
+      throw new Error(resJson.error || "자료 생성에 실패했습니다.");
+    }
+
+    state.lastMaterialText = resJson.material || "";
+    if (heading) heading.textContent = `📋 "${question}" 브리핑 자료`;
+    if (refDate) refDate.textContent = resJson.period || "기준 연도";
+
+    if (content) {
+      content.innerHTML = window.marked ? window.marked.parse(state.lastMaterialText) : `<pre>${state.lastMaterialText}</pre>`;
+    }
+
+    if (card) {
+      card.classList.remove("hidden");
+      card.scrollIntoView({ behavior: "smooth" });
+    }
+
+    appLog("MATERIAL", `자료 생성 완료 (${state.lastMaterialText.length}자)`);
+    showAlert("📑 질문 내용을 바탕으로 완성형 브리핑 자료가 성공적으로 생성되었습니다!", "success");
+
+  } catch (err) {
+    appLog("ERROR", `자료 생성 오류: ${err.message}`);
+    showAlert(`자료 생성 실패: ${err.message}`);
+  } finally {
+    if (loading) loading.classList.add("hidden");
+    if (btnBuild) btnBuild.disabled = false;
   }
 }
 

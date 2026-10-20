@@ -236,6 +236,40 @@
               <h4>🎓 AI 선생님의 쉬운 해설</h4>
               <div class="markdown-body" id="customQueryExplainContent"></div>
             </div>
+
+            <!-- 📑 질문 내용 기반 완성형 보고서/학습자료 생성 영역 -->
+            <div class="custom-query-material-actions">
+              <button type="button" class="btn btn-primary" id="btnBuildQueryMaterial">
+                📑 질문한 내용으로 완성형 분석 자료(보고서) 만들기 ✨
+              </button>
+              <button type="button" class="btn btn-secondary" id="btnCopyQueryMaterial">
+                📋 자료 복사
+              </button>
+              <button type="button" class="btn btn-secondary" id="btnPrintQueryMaterial">
+                🖨️ PDF / 인쇄 자료로 저장
+              </button>
+            </div>
+
+            <!-- 자료 생성 로딩 -->
+            <div class="loading-state hidden" id="customQueryMaterialLoading">
+              <div class="spinner"></div>
+              <p>질문하신 내용과 100% 검증된 수치 팩트를 종합하여 맞춤형 데이터 브리핑 자료를 구성하고 있습니다...</p>
+            </div>
+
+            <!-- 생성된 완성형 자료 카드 -->
+            <div class="custom-query-material-card hidden" id="customQueryMaterialCard">
+              <div class="material-card-header">
+                <div class="material-title-area">
+                  <span class="material-badge">📑 데이터 인사이트 브리핑 자료</span>
+                  <h3 id="materialHeading">맞춤 데이터 분석 리포트</h3>
+                </div>
+                <div class="material-meta-tags">
+                  <span class="tag-pandas">Pandas 팩트 보증</span>
+                  <span class="badge" id="materialRefDate">2024년 기준</span>
+                </div>
+              </div>
+              <div class="markdown-body material-body" id="materialContent"></div>
+            </div>
           </div>
         </div>
 
