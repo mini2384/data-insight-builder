@@ -1,0 +1,23 @@
+{
+  "name": "AI Data Insight Builder",
+  "short_name": "InsightBuilder",
+  "description": "자연과 통계의 따뜻한 만남 • 공식 CSV 정밀 분석 • Gemini AI 팩트 인사이트",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfcf8",
+  "theme_color": "#fef08a",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
